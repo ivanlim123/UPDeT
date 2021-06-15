@@ -43,7 +43,7 @@ class UPDeT(nn.Module):
             q_enemies_list.append(q_enemy_mean)
 
         # concat enemy Q over all enemies
-        q_enemies = torch.stack(q_enemies_list, dim=1).squeeze()
+        q_enemies = torch.stack(q_enemies_list, dim=2).squeeze()
         if len(q_enemies.size()) == 2:
             q_enemies = torch.unsqueeze(q_enemies, 0)
         
