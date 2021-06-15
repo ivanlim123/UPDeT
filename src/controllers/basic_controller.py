@@ -58,7 +58,8 @@ class BasicMAC:
         else:
             agent_inputs = self._build_inputs_transformer(ep_batch, t)
             agent_outs, self.hidden_states = self.agent(agent_inputs,
-                                                           self.hidden_states.reshape(-1, 1, self.args.emb),
+                                                           #self.hidden_states.reshape(-1, 1, self.args.emb),
+                                                           self.hidden_states,
                                                            self.args.enemy_num, self.args.ally_num)
 
         return agent_outs.view(ep_batch.batch_size, self.n_agents, -1)
@@ -67,7 +68,9 @@ class BasicMAC:
         if self.args.agent not in ['updet', 'transformer_aggregation']:
             self.hidden_states = self.agent.init_hidden().unsqueeze(0).expand(batch_size, self.n_agents, -1)  # bav
         else:
-            self.hidden_states = self.agent.init_hidden().unsqueeze(0).expand(batch_size, self.n_agents, 1, -1)
+            #self.hidden_states = self.agent.init_hidden().unsqueeze(0).expand(batch_size, self.n_agents, 1, -1)
+            self.hidden_states = self.agent.init_hidden().unsqueeze(0).expand(batch_size, self.n_agents, -1)
+            #print(self.hidden_states.shape)
 
 
     def parameters(self):
@@ -111,9 +114,14 @@ class BasicMAC:
         inputs = []
         raw_obs = batch["obs"][:, t]
         arranged_obs = th.cat((raw_obs[:, :, -1:], raw_obs[:, :, :-1]), 2)
-        reshaped_obs = arranged_obs.view(-1, 1 + (self.args.enemy_num - 1) + self.args.ally_num, self.args.token_dim)
+        #reshaped_obs = arranged_obs.view(-1, 1 + (self.args.enemy_num - 1) + self.args.ally_num, self.args.token_dim)
+        
+        reshaped_obs = arranged_obs
+        #print(arranged_obs.shape)
+        
         inputs.append(reshaped_obs)
         inputs = th.cat(inputs, dim=1).cuda()
+        #print(inputs.shape)
         return inputs
 
     def _get_input_shape(self, scheme):
