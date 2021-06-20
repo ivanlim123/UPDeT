@@ -9,50 +9,17 @@ class UPDeT(nn.Module):
         super(UPDeT, self).__init__()
         self.args = args
         self.transformer = Transformer(args.token_dim, args.emb, args.heads, args.depth, args.emb)
-        self.mapping = nn.Linear(1, args.emb)
-        self.q_basic = nn.Linear(args.emb, 6)
 
     def init_hidden(self):
         # make hidden states on same device as model
         return torch.zeros(1, self.args.emb).cuda()
 
     def forward(self, inputs, hidden_state, task_enemy_num, task_ally_num):
-        #print(inputs.shape)
-        #print(hidden_state.shape)
         outputs, _ = self.transformer.forward(inputs, hidden_state, None)
-        #print("GOOD")
-        #print(outputs.shape)
-        # first output for 6 action (no_op stop up down left right)
-        b, l, e = outputs.size()
-        
-        mapping_actions = self.mapping(outputs[:, :, 0].view(-1, 1)).view(b, l, self.args.emb)
-        q_basic_actions = self.q_basic(mapping_actions)
+        q = outputs[:, :, :6+task_enemy_num]
 
         # last dim for hidden state
         h = outputs[:, :, self.args.emb:]
-
-        q_enemies_list = []
-
-        # each enemy has an output Q
-        for i in range(task_enemy_num):
-            mapping_actions = self.mapping(outputs[:, :, 1+i].view(-1, 1)).view(b, l, self.args.emb)
-            q_enemy = self.q_basic(mapping_actions)
-            #print(q_enemy.shape)
-            q_enemy_mean = torch.mean(q_enemy, 2, True)
-            #print(q_enemy_mean.shape)
-            q_enemies_list.append(q_enemy_mean)
-
-        # concat enemy Q over all enemies
-        q_enemies = torch.stack(q_enemies_list, dim=2).squeeze()
-        if len(q_enemies.size()) == 2:
-            q_enemies = torch.unsqueeze(q_enemies, 0)
-        
-        #print(q_enemies.shape)
-        #print(q_basic_actions.shape)
-        
-        # concat basic action Q with enemy attack Q
-        q = torch.cat((q_basic_actions, q_enemies), 2)
-        #print(q.shape)
 
         return q, h
 
