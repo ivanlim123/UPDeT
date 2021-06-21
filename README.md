@@ -34,6 +34,17 @@ Before training your own transformer-based multi-agent model, there are a list o
 ```shell
 python3 src/main.py --config=vdn --env-config=sc2 with env_args.map_name=3m
 ```
+
+## Performance
+
+### Training
+![](https://i.imgur.com/3Y8sXHR.png)
+![](https://i.imgur.com/VKn86y1.png)
+
+### Transfer Learning
+![](https://i.imgur.com/8zS4UJx.png)
+
+
 All results will be stored in the `Results/` folder.
 
 **Note: Only** UPDeT can be deployed to other scenarios without changing the model's architecture.
